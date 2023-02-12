@@ -3,12 +3,15 @@ const { BookingRepository } = require("../repository/index");
 const { FLIGHT_SERVICE_PATH } = require("../config/serverConfig");
 const { ServiceError } = require("../utils/errors");
 
+const { getChannel, publishMessage } = require("../utils/messageQueue");
+
 class BookingService {
   constructor() {
     this.bookingRepository = new BookingRepository();
   }
 
   async createBooking(data) {
+    const channel = await getChannel();
     try {
       const flightId = data.flightId;
       const getFlightRequestURL = `${FLIGHT_SERVICE_PATH}/api/v1/flights/${flightId}`;
@@ -31,6 +34,7 @@ class BookingService {
       const finalBooking = await this.bookingRepository.update(booking.id, {
         status: "Booked",
       });
+
       return finalBooking;
     } catch (error) {
       if (error.name == "RepositoryError" || error.name == "ValidationError") {
